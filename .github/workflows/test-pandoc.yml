@@ -1,7 +1,6 @@
 name: test-pandoc
 
-on:
-  workflow_dispatch:
+on: happy
 
 jobs:
 

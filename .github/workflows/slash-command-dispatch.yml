@@ -10,5 +10,7 @@ jobs:
         uses: peter-evans/slash-command-dispatch@v4
         with:
           token: ${{ secrets.PAT }}
-          commands: example
+          commands: |
+              example
+              list
           repository: kellijohnson-NOAA/sandbox

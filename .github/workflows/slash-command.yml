@@ -1,0 +1,17 @@
+name: Command Reply
+on:
+  repository_dispatch:
+    types: [list-command]
+jobs:
+  helloWorld:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+          body: |
+            Below are the steps to add software for your new project
+
+            * Cmake
+            * VS Code

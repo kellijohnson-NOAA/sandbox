@@ -1,14 +1,16 @@
-name: Command Reply
+name: list-command
 on:
   repository_dispatch:
     types: [list-command]
 jobs:
-  helloWorld:
+  list:
     runs-on: ubuntu-latest
     steps:
       - name: Create comment
         uses: peter-evans/create-or-update-comment@v4
         with:
+          token: ${{ secrets.PAT }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
           issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
           body: |
             Below are the steps to add software for your new project

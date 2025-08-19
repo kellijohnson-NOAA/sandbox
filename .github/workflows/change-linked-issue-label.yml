@@ -33,9 +33,9 @@ jobs:
                   }
                 }
               }' \
-              -f owner='${{ github.repository_owner }}' \
-              -f repo='${{ github.event.repository.name }}' \
-              -f pr=$PR_NUMBER \
+              -f owner='kellijohnson-NOAA' \
+              -f repo='sandbox' \
+              -f variables='{"pr": '${PR_NUMBER}'}' \
               --jq '.data.repository.pullRequest.closingIssuesReferences.nodes[].number' | tr '\n' ' ')
               
             echo "Found linked issue numbers: $ISSUE_NUMBERS"

@@ -21,25 +21,25 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          ISSUE_NUMBERS=$(gh api graphql -f query='
-            query($repo: String!, $owner: String!, $pr: Int!) {
-              repository(owner: $owner, name: $repo) {
-                pullRequest(number: $pr) {
-                  closingIssuesReferences(first: 100) {
-                    nodes {
-                      number
+            ISSUE_NUMBERS=$(gh api graphql -f query='
+              query($repo: String!, $owner: String!, $pr: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequest(number: $pr) {
+                    closingIssuesReferences(first: 100) {
+                      nodes {
+                        number
+                      }
                     }
                   }
                 }
-              }
-            }' \
-            -f owner='${{ github.repository_owner }}' \
-            -f repo='${{ github.event.repository.name }}' \
-            -f pr="$PR_NUMBER" \
-            --jq '.data.repository.pullRequest.closingIssuesReferences.nodes[].number' | tr '\n' ' ')
-            
-          echo "Found linked issue numbers: $ISSUE_NUMBERS"
-          echo "issue_numbers=$ISSUE_NUMBERS" >> $GITHUB_OUTPUT
+              }' \
+              -f owner='${{ github.repository_owner }}' \
+              -f repo='${{ github.event.repository.name }}' \
+              -f pr=$PR_NUMBER \
+              --jq '.data.repository.pullRequest.closingIssuesReferences.nodes[].number' | tr '\n' ' ')
+              
+            echo "Found linked issue numbers: $ISSUE_NUMBERS"
+            echo "issue_numbers=$ISSUE_NUMBERS" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Update Labels for Each Linked Issue

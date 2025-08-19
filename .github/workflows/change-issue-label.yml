@@ -1,0 +1,38 @@
+name: Change Issue Label on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - dev
+
+jobs:
+  update-label:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: read
+    
+    steps:
+      - name: Get All Linked Issue Numbers
+        id: get_issue_numbers
+        run: |
+          ISSUE_NUMBERS=$(echo "${{ github.event.pull_request.body }}" | grep -o -E '#[0-9]+' | sed 's/#//' | tr '\n' ' ')
+          echo "Found issue numbers: $ISSUE_NUMBERS"
+          echo "issue_numbers=$ISSUE_NUMBERS" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Update Labels for Each Linked Issue
+        if: steps.get_issue_numbers.outputs.issue_numbers != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OLD_LABEL: "status: in progress"
+          NEW_LABEL: "status: in dev"
+        run: |
+          for ISSUE_NUMBER in ${{ steps.get_issue_numbers.outputs.issue_numbers }}; do
+            echo "Processing issue #$ISSUE_NUMBER"
+            gh issue edit $ISSUE_NUMBER --remove-label "$OLD_LABEL"
+            gh issue edit $ISSUE_NUMBER --add-label "$NEW_LABEL"
+          done
+        shell: bash

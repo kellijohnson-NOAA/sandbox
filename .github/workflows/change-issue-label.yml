@@ -30,6 +30,10 @@ jobs:
           OLD_LABEL: "status: in progress"
           NEW_LABEL: "status: in dev"
         run: |
+          # Check if the new label exists, create it if not
+          gh label view "$NEW_LABEL" --repo ${{ github.repository }} >/dev/null 2>&1 || \
+          gh label create "$NEW_LABEL" --repo ${{ github.repository }} --color 0E8A16 --description "This work is completed and is in the dev branch"
+          
           for ISSUE_NUMBER in ${{ steps.get_issue_numbers.outputs.issue_numbers }}; do
             echo "Processing issue #$ISSUE_NUMBER"
             gh issue edit $ISSUE_NUMBER --repo ${{ github.repository }} --remove-label "$OLD_LABEL"

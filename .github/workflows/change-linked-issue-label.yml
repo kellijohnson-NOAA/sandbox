@@ -49,7 +49,7 @@ jobs:
         run: |
           for ISSUE_NUMBER in ${{ steps.get_linked_issues.outputs.issue_numbers }}; do
             echo "Processing issue #$ISSUE_NUMBER"
-            gh issue edit $ISSUE_NUMBER --remove-label "$OLD_LABEL"
-            gh issue edit $ISSUE_NUMBER --add-label "$NEW_LABEL"
+            gh issue edit $ISSUE_NUMBER --repo ${{ github.repository }} --remove-label "$OLD_LABEL"
+            gh issue edit $ISSUE_NUMBER --repo ${{ github.repository }} --add-label "$NEW_LABEL"
           done
         shell: bash

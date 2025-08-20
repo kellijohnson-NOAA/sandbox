@@ -57,8 +57,10 @@ jobs:
           
           echo "Final list of unique issue numbers: $ALL_ISSUE_NUMBERS"
           
-          # Check if the new label exists before attempting to create it
-          if ! gh label view "$NEW_LABEL" --repo ${{ github.repository }} >/dev/null 2>&1; then
+          # Check if the new label exists by viewing all labels and searching
+          LABELS=$(gh label list --repo ${{ github.repository }} --json name)
+          
+          if [[ ! $LABELS =~ \"$NEW_LABEL\" ]]; then
             echo "Label '$NEW_LABEL' does not exist. Creating it now."
             gh label create "$NEW_LABEL" --repo ${{ github.repository }} --color 0E8A16 --description "This work is completed and is in the dev branch"
           else

@@ -21,25 +21,23 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-            ISSUE_NUMBERS=$(gh api graphql -f query='
-              query($repo: String!, $owner: String!, $pr: Int!) {
-                repository(owner: $owner, name: $repo) {
-                  pullRequest(number: $pr) {
-                    closingIssuesReferences(first: 100) {
-                      nodes {
-                        number
-                      }
-                    }
-                  }
-                }
-              }' \
-              -f owner='kellijohnson-NOAA' \
-              -f repo='sandbox' \
-              -f variables='{"pr": '${PR_NUMBER}'}' \
-              --jq '.data.repository.pullRequest.closingIssuesReferences.nodes[].number' | tr '\n' ' ')
-              
-            echo "Found linked issue numbers: $ISSUE_NUMBERS"
-            echo "issue_numbers=$ISSUE_NUMBERS" >> $GITHUB_OUTPUT
+          # 1. Create the GraphQL query and variables JSON
+          cat <<EOF > graphql-query.json
+          {
+            "query": "query(\$owner: String!, \$repo: String!, \$pr: Int!) { repository(owner: \$owner, name: \$repo) { pullRequest(number: \$pr) { closingIssuesReferences(first: 100) { nodes { number } } } } }",
+            "variables": {
+              "owner": "${{ github.repository_owner }}",
+              "repo": "${{ github.event.repository.name }}",
+              "pr": ${{ github.event.pull_request.number }}
+            }
+          }
+          EOF
+          
+          # 2. Execute the query using the JSON payload
+          ISSUE_NUMBERS=$(gh api graphql --input graphql-query.json --jq '.data.repository.pullRequest.closingIssuesReferences.nodes[].number' | tr '\n' ' ')
+          
+          echo "Found linked issue numbers: $ISSUE_NUMBERS"
+          echo "issue_numbers=$ISSUE_NUMBERS" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Update Labels for Each Linked Issue

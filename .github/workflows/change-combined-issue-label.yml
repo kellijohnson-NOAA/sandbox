@@ -77,6 +77,11 @@ jobs:
               echo "Label '$OLD_LABEL' does not exist on issue #$ISSUE_NUMBER. Skipping removal."
             fi
 
-            gh issue edit $ISSUE_NUMBER --repo ${{ github.repository }} --add-label "$NEW_LABEL"
+            if gh issue view $ISSUE_NUMBER --repo ${{ github.repository }} --json labels | grep -q "$NEW_LABEL"; then
+              echo "Label '$NEW_LABEL' already exists on issue #$ISSUE_NUMBER. Skipping addition."
+            else
+              echo "Adding label '$NEW_LABEL' to issue #$ISSUE_NUMBER"
+              gh issue edit $ISSUE_NUMBER --repo ${{ github.repository }} --add-label "$NEW_LABEL"
+            fi
           done
         shell: bash

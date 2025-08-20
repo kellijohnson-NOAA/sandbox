@@ -57,14 +57,24 @@ jobs:
           
           echo "Final list of unique issue numbers: $ALL_ISSUE_NUMBERS"
           
-          # Check if the new label exists, create it if not
-          gh label view "$NEW_LABEL" --repo ${{ github.repository }} >/dev/null 2>&1 || \
-          gh label create "$NEW_LABEL" --repo ${{ github.repository }} --color 0E8A16 --description "This work is completed and is in the dev branch"
-          
+          # Check if the new label exists before attempting to create it
+          if ! gh label view "$NEW_LABEL" --repo ${{ github.repository }} >/dev/null 2>&1; then
+            echo "Label '$NEW_LABEL' does not exist. Creating it now."
+            gh label create "$NEW_LABEL" --repo ${{ github.repository }} --color 0E8A16 --description "This work is completed and is in the dev branch"
+          else
+            echo "Label '$NEW_LABEL' already exists. Skipping creation."
+          fi
+
           # Update the labels on each unique linked issue
           for ISSUE_NUMBER in $ALL_ISSUE_NUMBERS; do
             echo "Processing issue #$ISSUE_NUMBER"
-            gh issue edit $ISSUE_NUMBER --repo ${{ github.repository }} --remove-label "$OLD_LABEL"
+            if gh issue view $ISSUE_NUMBER --repo ${{ github.repository }} --json labels | grep -q "$OLD_LABEL"; then
+              gh issue edit $ISSUE_NUMBER --repo ${{ github.repository }} --remove-label "$OLD_LABEL"
+              echo "Removed label '$OLD_LABEL' from issue #$ISSUE_NUMBER"
+            else
+              echo "Label '$OLD_LABEL' does not exist on issue #$ISSUE_NUMBER. Skipping removal."
+            fi
+
             gh issue edit $ISSUE_NUMBER --repo ${{ github.repository }} --add-label "$NEW_LABEL"
           done
         shell: bash

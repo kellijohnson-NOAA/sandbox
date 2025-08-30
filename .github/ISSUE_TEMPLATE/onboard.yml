@@ -1,0 +1,20 @@
+name: Member
+description: Checklist
+title: "[Onboard]: <name>"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # :warning: Read Before Proceeding :warning:
+
+        Please ask the onboardee if they are comfortable with announcing their onboarding to the team via a GitHub Issue BEFORE filling out this Issue Template. This repository is public and they might not want to announce their future position until a certain date or they might prefer to use email instead of GitHub to track their onboarding. 
+
+  - type: input
+    id: user-name
+    attributes:
+      label: Onboardee's Name
+      description: The full name of the onboardee.
+      placeholder: Ex. Jane Doe
+    validations:
+      required: true

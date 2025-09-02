@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issue_comments: write
+      issues: write
       reactions: write
     steps:
       - name: Slash Command Dispatch

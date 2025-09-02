@@ -9,8 +9,9 @@ jobs:
       - name: Slash Command Dispatch
         uses: peter-evans/slash-command-dispatch@v4
         with:
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commands: |
               example
               list
+          permission: write
           repository: kellijohnson-NOAA/sandbox

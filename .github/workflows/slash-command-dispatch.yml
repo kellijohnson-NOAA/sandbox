@@ -5,6 +5,10 @@ on:
 jobs:
   slashCommandDispatch:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issue_comments: write
+      reactions: write
     steps:
       - name: Slash Command Dispatch
         uses: peter-evans/slash-command-dispatch@v4
@@ -14,5 +18,4 @@ jobs:
           commands: |
               example
               list
-          permission: write
           repository: kellijohnson-NOAA/sandbox

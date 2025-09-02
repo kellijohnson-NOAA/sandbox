@@ -8,7 +8,6 @@ jobs:
     permissions:
       contents: read
       issues: write
-      reactions: write
     steps:
       - name: Slash Command Dispatch
         uses: peter-evans/slash-command-dispatch@v4

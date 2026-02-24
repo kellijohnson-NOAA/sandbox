@@ -114,6 +114,6 @@ help:
 	@echo "  make run-basics   - Run all basic examples"
 	@echo "  make run-inter    - Run all intermediate examples"
 	@echo "  make run-advanced - Run all advanced examples"
-	@echo "  make run-exercises- Run all exercise solutions"
+	@echo "  make run-exercises - Run all exercise solutions"
 	@echo "  make clean        - Remove all compiled files"
 	@echo "  make help         - Show this help message"

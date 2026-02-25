@@ -129,7 +129,7 @@ jobs:
       - name: Run clang-format
         uses: DoozyX/clang-format-lint-action@v0.20
         with:
-          source: './inst/include ./src ./tests/gtest'
+          source: './inst/include'
           extensions: 'hpp, cpp'
           style: "{BasedOnStyle: Google, SortIncludes: false}"
           inplace: True

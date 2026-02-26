@@ -3,7 +3,7 @@
 name: Add a comment with reviewer checklist when PR opened
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened]
 
 permissions:

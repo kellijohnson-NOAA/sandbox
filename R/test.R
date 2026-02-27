@@ -1,5 +1,5 @@
 my_function <- function() {
-  mean(
+  min(
     1:8
   )
   print("This is the best function ever")

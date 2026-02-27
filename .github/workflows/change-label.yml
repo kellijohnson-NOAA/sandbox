@@ -33,8 +33,14 @@ jobs:
             let match;
             const issueNumbers = new Set();
 
+            console.log('PR number:', pr.number);
+            console.log('PR base ref:', pr.base.ref);
+            console.log('PR merged:', pr.merged);
+            console.log('PR body:', prBody);
+
             // Find issues referenced by closing keywords in PR body
             while ((match = regex.exec(prBody)) !== null) {
+              console.log(`Found issue in PR body: #${match[1]}`);
               issueNumbers.add(Number(match[1]));
             }
 
@@ -47,11 +53,13 @@ jobs:
                 per_page: 100
               }
             );
+            console.log(`Total commits: ${commits.length}`);
             for (const commit of commits) {
               const messages = [commit.commit.message];
               for (const message of messages) {
                 let m;
                 while ((m = regex.exec(message)) !== null) {
+                  console.log(`Found issue in commit message: #${m[1]} (commit: ${commit.sha})`);
                   issueNumbers.add(Number(m[1]));
                 }
               }
@@ -66,6 +74,7 @@ jobs:
                 per_page: 100
               }
             );
+            console.log(`Total timeline events: ${timeline.length}`);
             for (const event of timeline) {
               if (
                 event.event === 'connected' &&
@@ -74,27 +83,44 @@ jobs:
                 event.source.issue &&
                 event.source.issue.number
               ) {
+                console.log(`Found connected issue in timeline: #${event.source.issue.number}`);
                 issueNumbers.add(event.source.issue.number);
               }
             }
 
+            console.log('All referenced issue numbers:', Array.from(issueNumbers));
+
             // Update labels for each referenced issue
             for (const issue_number of issueNumbers) {
-              // Get current labels
-              const { data: issue } = await github.rest.issues.get({
-                ...context.repo,
-                issue_number
-              });
-              const labels = issue.labels.map(l => typeof l === 'string' ? l : l.name);
-              // Add "status: in dev" if not present
-              if (!labels.includes('status: in dev')) {
-                labels.push('status: in dev');
+              try {
+                // Get current labels
+                const { data: issue } = await github.rest.issues.get({
+                  ...context.repo,
+                  issue_number
+                });
+                const labels = issue.labels.map(l => typeof l === 'string' ? l : l.name);
+                console.log(`Current labels for issue #${issue_number}:`, labels);
+                // Add "status: in dev" if not present
+                if (!labels.includes('status: in dev')) {
+                  labels.push('status: in dev');
+                  console.log(`Adding 'status: in dev' to issue #${issue_number}`);
+                }
+                // Remove "status: in progress" if present
+                const newLabels = labels.filter(l => l !== 'status: in progress');
+                if (labels.length !== newLabels.length) {
+                  console.log(`Removing 'status: in progress' from issue #${issue_number}`);
+                }
+                console.log(`Updating issue #${issue_number} with labels:`, newLabels);
+                await github.rest.issues.update({
+                  ...context.repo,
+                  issue_number,
+                  labels: newLabels
+                });
+                console.log(`Successfully updated labels for issue #${issue_number}`);
+              } catch (err) {
+                console.log(`Error updating labels for issue #${issue_number}:`, err);
               }
-              // Remove "status: in progress" if present
-              const newLabels = labels.filter(l => l !== 'status: in progress');
-              await github.rest.issues.update({
-                ...context.repo,
-                issue_number,
-                labels: newLabels
-              });
+            }
+            if (issueNumbers.size === 0) {
+              console.log('No referenced issues found to update.');
             }

@@ -33,7 +33,9 @@
 name: pr-format
 
 on:
-  pull_request:
+  # Use pull_request_target because we want it to work when PRs are from forks
+  # see https://runs-on.com/github-actions/pull-request-vs-pull-request-target/
+  pull_request_target:
     types: [opened, reopened, synchronize]
     branches:
       - main

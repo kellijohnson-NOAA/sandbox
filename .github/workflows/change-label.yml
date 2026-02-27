@@ -65,6 +65,7 @@ jobs:
               }
             }
 
+
             // Find issues linked in the "Development" section (timeline events)
             const timeline = await github.paginate(
               github.rest.issues.listEventsForTimeline,
@@ -86,6 +87,25 @@ jobs:
                 console.log(`Found connected issue in timeline: #${event.source.issue.number}`);
                 issueNumbers.add(event.source.issue.number);
               }
+            }
+
+            // Find issues linked in the Development section using listLinkedIssues API
+            try {
+              const linkedIssuesResp = await github.rest.issues.listLinkedIssues({
+                ...context.repo,
+                issue_number: pr.number,
+                per_page: 100
+              });
+              const linkedIssues = linkedIssuesResp.data || [];
+              console.log(`Total issues found via listLinkedIssues: ${linkedIssues.length}`);
+              for (const issue of linkedIssues) {
+                if (issue && issue.number) {
+                  console.log(`Found linked issue via listLinkedIssues: #${issue.number}`);
+                  issueNumbers.add(issue.number);
+                }
+              }
+            } catch (err) {
+              console.log('Error fetching linked issues via listLinkedIssues:', err);
             }
 
             console.log('All referenced issue numbers:', Array.from(issueNumbers));

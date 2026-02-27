@@ -18,6 +18,8 @@ jobs:
         uses: actions/github-script@v8
         if: github.event_name == 'pull_request'
         with:
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { data: pullRequest } = await github.rest.pulls.get({
               owner: context.repo.owner,

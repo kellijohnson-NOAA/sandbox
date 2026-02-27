@@ -108,6 +108,20 @@ jobs:
               console.log('Error fetching linked issues via listLinkedIssues:', err);
             }
 
+            // Add issues found via GraphQL step
+            let graphqlIssueNumbers = [];
+            try {
+              graphqlIssueNumbers = JSON.parse(process.env.INPUT_RESULT || '[]');
+            } catch (e) {
+              console.log('Could not parse GraphQL linked issues:', e);
+            }
+            if (Array.isArray(graphqlIssueNumbers)) {
+              for (const n of graphqlIssueNumbers) {
+                console.log(`Adding GraphQL found issue: #${n}`);
+                issueNumbers.add(Number(n));
+              }
+            }
+
             console.log('All referenced issue numbers:', Array.from(issueNumbers));
 
             // Update labels for each referenced issue

@@ -68,19 +68,28 @@ jobs:
             echo "This PR is from the same repository"
           fi
       
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '🎨 Chore: code formatting workflow'
+
       # If this is a fork, add a comment with instructions (if not already present) and exit
       - name: Comment on fork PR with formatting instructions
         if: steps.check_fork.outputs.is_fork == 'true'
-        uses: peter-evans/create-or-update-comment@v4
+        uses: peter-evans/create-or-update-comment@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            ## 🎨 Code Formatting Workflow
+            ## 🎨 Chore: code formatting workflow
             
-            Our automated workflows cannot run on forks because of permission issues, and thus, we ask that you run the following code locally and push any changes they create to your feature branch. This comment will only be created once but it is imperative that the final changes maintain these style guidelines. Thank you!
+            Our automated workflows cannot run on forks because of permission issues, and thus, we ask that you run the following code locally and push any changes that are created to your feature branch. You will only be reminded of this once per PR. Thank you!
             
-            ### Format C++ Code
+            ### Format C++ code
             
             1. Install clang-format version 18.0.0
             2. Run the following command from the repository root:
@@ -88,7 +97,7 @@ jobs:
                clang-format -i --style="{BasedOnStyle: Google, SortIncludes: false}" $(find ./inst/include ./src ./tests/gtest -name "*.hpp" -o -name "*.cpp")
                ```
             
-            ### Format R Code
+            ### Format R code
             
             1. Install {styler} and {roxygen2}
             2. Run the following commands in R from the repository root:
@@ -100,12 +109,11 @@ jobs:
             usethis::use_tidy_description() # Style DESCRIPTION file
             ```
             
-            ### After Formatting
+            ### Push changes
             
-            1. Commit the formatting with a commit message of "style: format C++ and R code"
+            1. Commit the formatting with a commit message of "Chore: format feature branch"
             2. Push to your fork
           edit-mode: replace
-          body-pattern: '🎨 Code Formatting Workflow'
 
       # Checkout the source branch (head ref) of the Pull Request where
       # formatting will be applied (only for non-forks)

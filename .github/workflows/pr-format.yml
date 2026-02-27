@@ -71,7 +71,7 @@ jobs:
         if: steps.check_fork.outputs.is_fork == 'true'
         uses: actions/github-script@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const instructions = `## 🎨 Code Formatting Workflow
             

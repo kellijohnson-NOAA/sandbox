@@ -1,161 +1,28 @@
 name: Change Issue Label on PR Merge
 
 on:
+  workflow_dispatch:
   # Use pull_request_target because we want it to work when PRs are from forks
   # see https://runs-on.com/github-actions/pull-request-vs-pull-request-target/
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize]
     branches:
       - main
       - dev
 
 jobs:
-  update-issue-labels:
-    # Only update the labels if the PR is merged to dev and abort if just closed
-    # if: >
-    #   github.event.pull_request.merged == true &&
-    #   github.event.pull_request.base.ref == 'dev'
+  get-linked-issues:
+    name: Get linked issues
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: read
-    
     steps:
-      - name: Find and update referenced issues
-        uses: actions/github-script@v7
+      - name: Get issues
+        id: get-issues
+        uses: mondeja/pr-linked-issues-action@v2
         with:
-          script: |
-            const closingKeywords = [
-              'close', 'closes', 'closed',
-              'fix', 'fixes', 'fixed',
-              'resolve', 'resolves', 'resolved'
-            ];
-            const pr = context.payload.pull_request;
-            const prBody = pr.body || '';
-            const regex = new RegExp(`(?:${closingKeywords.join('|')})\\s+#(\\d+)`, 'gi');
-            let match;
-            const issueNumbers = new Set();
-
-            console.log('PR number:', pr.number);
-            console.log('PR base ref:', pr.base.ref);
-            console.log('PR merged:', pr.merged);
-            console.log('PR body:', prBody);
-
-            // Find issues referenced by closing keywords in PR body
-            while ((match = regex.exec(prBody)) !== null) {
-              console.log(`Found issue in PR body: #${match[1]}`);
-              issueNumbers.add(Number(match[1]));
-            }
-
-            // Find issues referenced by closing keywords in commit messages
-            const commits = await github.paginate(
-              github.rest.pulls.listCommits,
-              {
-                ...context.repo,
-                pull_number: pr.number,
-                per_page: 100
-              }
-            );
-            console.log(`Total commits: ${commits.length}`);
-            for (const commit of commits) {
-              const messages = [commit.commit.message];
-              for (const message of messages) {
-                let m;
-                while ((m = regex.exec(message)) !== null) {
-                  console.log(`Found issue in commit message: #${m[1]} (commit: ${commit.sha})`);
-                  issueNumbers.add(Number(m[1]));
-                }
-              }
-            }
-
-
-            console.log('All referenced issue numbers:', Array.from(issueNumbers));
-
-            // Use GraphQL API to find issues linked in the Development section
-            try {
-              const prNodeId = pr.node_id;
-              console.log('PR node_id:', prNodeId);
-              const query = `
-                query($prNodeId: ID!) {
-                  node(id: $prNodeId) {
-                    ... on PullRequest {
-                      closingIssuesReferences(first: 20) {
-                        nodes {
-                          number
-                          title
-                          url
-                        }
-                      }
-                      linkedIssues: linkedIssues(first: 20) {
-                        nodes {
-                          number
-                          title
-                          url
-                        }
-                      }
-                    }
-                  }
-                }
-              `;
-              const result = await github.graphql(query, { prNodeId });
-              let graphqlIssueNumbers = [];
-              if (result && result.node) {
-                const prNode = result.node;
-                if (prNode.closingIssuesReferences && prNode.closingIssuesReferences.nodes) {
-                  for (const issue of prNode.closingIssuesReferences.nodes) {
-                    graphqlIssueNumbers.push(issue.number);
-                    console.log(`GraphQL closing reference: #${issue.number} - ${issue.title}`);
-                  }
-                }
-                if (prNode.linkedIssues && prNode.linkedIssues.nodes) {
-                  for (const issue of prNode.linkedIssues.nodes) {
-                    graphqlIssueNumbers.push(issue.number);
-                    console.log(`GraphQL linked issue: #${issue.number} - ${issue.title}`);
-                  }
-                }
-              }
-              // Remove duplicates
-              graphqlIssueNumbers = [...new Set(graphqlIssueNumbers)];
-              console.log('GraphQL found issue numbers:', graphqlIssueNumbers);
-              for (const n of graphqlIssueNumbers) {
-                issueNumbers.add(Number(n));
-                console.log(`Added GraphQL issue #${n} to issueNumbers set.`);
-              }
-            } catch (err) {
-              console.log('Error fetching linked issues via GraphQL:', err);
-            }
-
-            // Update labels for each referenced issue
-            // for (const issue_number of issueNumbers) {
-            //   try {
-            //     // Get current labels
-            //     const { data: issue } = await github.rest.issues.get({
-            //       ...context.repo,
-            //       issue_number
-            //     });
-            //     const labels = issue.labels.map(l => typeof l === 'string' ? l : l.name);
-            //     console.log(`Current labels for issue #${issue_number}:`, labels);
-            //     // Add "status: in dev" if not present
-            //     if (!labels.includes('status: in dev')) {
-            //       labels.push('status: in dev');
-            //       console.log(`Adding 'status: in dev' to issue #${issue_number}`);
-            //     }
-            //     // Remove "status: in progress" if present
-            //     const newLabels = labels.filter(l => l !== 'status: in progress');
-            //     if (labels.length !== newLabels.length) {
-            //       console.log(`Removing 'status: in progress' from issue #${issue_number}`);
-            //     }
-            //     console.log(`Updating issue #${issue_number} with labels:`, newLabels);
-            //     await github.rest.issues.update({
-            //       ...context.repo,
-            //       issue_number,
-            //       labels: newLabels
-            //     });
-            //     console.log(`Successfully updated labels for issue #${issue_number}`);
-            //   } catch (err) {
-            //     console.log(`Error updating labels for issue #${issue_number}:`, err);
-            //   }
-            // }
-            // if (issueNumbers.size === 0) {
-            //   console.log('No referenced issues found to update.');
-            // }
+          repository_owner: NOAA-FIMS
+          repository_name: FIMS
+          pull_request: 57
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Print linked issue numbers
+        run: echo ${{ steps.get-issues.outputs.issues }}

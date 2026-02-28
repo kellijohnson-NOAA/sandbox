@@ -22,6 +22,12 @@ jobs:
           repository_owner: NOAA-FIMS
           repository_name: FIMS
           pull_request: 57
+          add_links_by_content: |
+            Closes #{issue_number}
+            closes #{issue_number}
+            Close #{issue_number}
+            close #{issue_number}
+            :wrench: {issue_number}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Print linked issue numbers

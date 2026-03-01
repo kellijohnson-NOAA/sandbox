@@ -47,3 +47,14 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# C++ build artifacts
+*.o
+*.out
+*.exe
+*.a
+*.so
+*.dylib
+build/
+bin/
+*.dSYM/

@@ -1,0 +1,50 @@
+name: Comment on Orphan PR
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  comment_if_issue_missing:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      pull-requests: write
+    steps:
+      - name: Check for linked issues and comment if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          echo "Checking PR body for issue references..."
+          
+          # Extract all numbers that follow a '#'
+          REFS=$(echo "$PR_BODY" | grep -oE '#[0-9]+' | tr -d '#' || true)
+          
+          ISSUE_FOUND=false
+          
+          for NUM in $REFS; do
+            echo "Checking #$NUM..."
+            
+            # Query the GitHub API to check the object type.
+            IS_PR=$(gh api repos/$GITHUB_REPOSITORY/issues/$NUM --jq 'has("pull_request")' 2>/dev/null || echo "not_found")
+            
+            if [ "$IS_PR" == "false" ]; then
+              echo "Success: #$NUM is a valid Issue."
+              ISSUE_FOUND=true
+              break
+            elif [ "$IS_PR" == "true" ]; then
+              echo "Ignore: #$NUM is a Pull Request, not an Issue."
+            else
+              echo "Ignore: #$NUM does not exist or is inaccessible."
+            fi
+          done
+          
+          if [ "$ISSUE_FOUND" == "true" ]; then
+            echo "PR references an actual issue. Skipping comment."
+          else
+            echo "No issue referenced. Leaving a comment..."
+
+            gh pr comment $PR_NUMBER --body "I noticed this PR doesn't have an associated issue. Please link an existing issue in the PR description, or create one for project tracking."
+          fi
